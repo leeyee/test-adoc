@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+	    <meta charset="utf-8"/>
+	    <title>ACTIVE account statement</title>
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	    <meta name="description" content=""/>
+	    <meta name="author" content=""/>
+	    <meta name="keywords" content=""/>
+	    <meta name="generator" content="JBake"/>
+	
+	    <!-- Le styles -->
+	    <link href="../css/bootstrap.min.css" rel="stylesheet"/>
+	    <link href="../css/asciidoctor.css" rel="stylesheet"/>
+	    <link href="../css/base.css" rel="stylesheet"/>
+	    <link href="../css/prettify.css" rel="stylesheet"/>
+	
+	    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+	    <!--[if lt IE 9]>
+	      <script src="../js/html5shiv.min.js"></script>
+	    <![endif]-->
+	
+	    <!-- Fav and touch icons -->
+	    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png"/>
+	    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png"/>
+	    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png"/>
+	    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png"/>-->
+	    <link rel="shortcut icon" href="../favicon.ico"/>
+	</head>
+	<body onload="prettyPrint()">
+	<div id="wrap">
+		<div>
+	
+	  <!-- Fixed navbar -->
+      <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../">JBake</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="../about.html">About</a></li>
+            <li><a href="../feed.xml">Subscribe</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li><a href="#">Another action</a></li>
+                <li><a href="#">Something else here</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+	</div>
+		<div class="container">
+	
+			<div class="page-header">
+				<h1>ACTIVE account statement</h1>
+			</div>
+		
+			<p><em>18 October 2013</em></p>
+		
+			<p><h1>ACTIVE account statement</h1>
+<blockquote>
+<p>Finance -&gt; Report -&gt; ACTIVE account statement</p>
+</blockquote>
+<p><strong>核心问题还是查询数据量大的问题。</strong></p>
+<p>invoke 2 Requests:</p>
+<ol>
+<li>/json/ReportProxyService/findPayPeriods</li>
+<li>/json/LongConnectionProxyService/getActiveAccountStatementReport</li>
+</ol>
+<h2>findPayPeriods</h2>
+<p>Default remittance cycle is <strong>SEMIMONTHLY</strong>,<br />
+if agency is not null, used<br />
+if remittance cycle from <strong>Ledger Service</strong> if not null, used (HomePageRemittanceInfo.xml)</p>
+<p>Find <code>RemittancePayPeriodGroup</code> by <code>findPayPeriodsInDateRange</code> method in <strong>Ledger Service</strong></p>
+<h2>getActiveAccountStatementReport</h2>
+<ol>
+<li>Author</li>
+<li>Save access log</li>
+<li>Get Report data</li>
+</ol>
+<h3>Get Report Data by USP</h3>
+<ol>
+<li>
+<p>get base data by usp</p>
+</li>
+<li>
+<p>covert to dto</p>
+</li>
+</ol>
+<blockquote>
+<p>sum计算使用了反射，有一定的性能问题（问题应该不大，但可进行优化）<code>ReportOdsDao#sum</code></p>
+</blockquote>
+<ol>
+<li>AUI display</li>
+</ol>
+<h3>dm_ledger_transactions:</h3>
+<p>记录和钱有关的交易。</p>
+<ul>
+<li>每个production(tuition/sessionoption, merchandise) 都会有一笔不同类型的流水; 'SALE'</li>
+<li>总支付总额也会有流水，同时对于支付总额; &quot;PAYMENT&quot;</li>
+<li>每笔交易的交易费也会产生流水; &quot;FEE&quot;</li>
+</ul>
+<blockquote>
+<p>external_order_id/external_order_id_INT : 对应OMS order_id<br />
+order_reference_id/order_reference_id_INT: 对应OMS order_line_id</p>
+</blockquote>
+<p>TAB: Payment activity</p>
+<p>Amount: 订单支付总金额<br />
+Processing Fee: 订单支付总金额FEE（用户费用+信用卡交易费）</p>
+<p>生成临时表 <code>#order_line_delta</code> 数据时，delta_amount 字段使用了如下的计算</p>
+<pre><code>ad1.payment_amount - lag((payment_amount), 1, 0)
+	OVER(PARTITION BY al1.order_line_id, ad1.payment_id, ad1.payment_type
+	    ORDER BY ad1.created_dt ) AS delta_amount
+</code></pre>
+<p>但在实际查看数据过程中，发现表<code>order_line_pmt_alloc_details.payment_amount_delta</code> 和该数据相同。</p>
+<p>Memebership 对应Season信息在USP中使用mock数据， ID=0, Name='Membership'</p>
+<pre><code>SELECT 0            AS grouping_id,
+       pm.order_id,
+       pm.id,
+       0            AS is_waitlist,
+       pm.person_id,
+       NULL         AS session_id,
+       pm.is_online,
+       pm.order_line_id,
+       NULL         AS transfer_type,
+       'Membership' AS grouping_name
+FROM camps_service.dbo.person_memberships pm
+</code></pre>
+<p>如果是POS，那么也不存在Season, 因此需要为Season也Mock ID 和 Name信息，如果返回为空的话，会导致AUI的 for Season Filter有异常。<code>AccountStatementView.js#buildSeasonList</code></p>
+<h3>Card Type</h3>
+<pre><code>select * from order_service.dbo.payments where order_id  = 190969971082928
+select top 1 * from order_service.dbo.payment_credit_card where payment_id = 200000000209632442
+select * from order_service.dbo.credit_card_accounts cca where cca.id = 438889627
+</code></pre>
+<h1>POS</h1>
+<p>Agency同步信息给POS。用户在POS上购买</p>
+<ol>
+<li>如果用户购买的POS是对应Agency下的，那么Payment activity 会展示用户姓名，并且点击订单可以查看订单详情</li>
+<li>如果用户购买的POS不是对应Agency下的，那么Payment activity 不会展用户姓名，并且点击订单查看详情的地址是错误的。</li>
+</ol>
+<p>上述两种情况下，Payment activity:<br />
++ Season 无法展示的，因为找不到。<br />
++ Payment method 没有，应为POS生成的订单信息中 Cart_Type字段记录为空</p>
+<p>TAB: Registration activity/Additional purchases activity 展示不出POS订单，除非购买POS的用户是提供POS的agency下的用户。</p>
+</p>
+		
+			<hr />
+			
+		</div>
+	</div>
+	<div>
+			<div id="push"></div>
+    
+		    <div id="footer">
+		      <div class="container">
+		        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake <span>v2.6.7</span></a></p>
+		      </div>
+		    </div>
+	    
+		    <!-- Le javascript
+		    ================================================== -->
+		    <!-- Placed at the end of the document so the pages load faster -->
+		    <script src="../js/jquery-1.11.1.min.js"></script>
+		    <script src="../js/bootstrap.min.js"></script>
+		    <script src="../js/prettify.js"></script>
+    
+    	</div>
+    </body>
+</html>
