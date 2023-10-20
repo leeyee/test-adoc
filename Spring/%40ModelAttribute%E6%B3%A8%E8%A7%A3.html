@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>SpringMVC @ModelAttribute注解说明</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <!-- Le styles -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/asciidoctor.css" rel="stylesheet">
+    <link href="../css/base.css" rel="stylesheet">
+    <link href="../css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+	
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../">JBake</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="../about.html">About</a></li>
+            <li><a href="../tags.html">Tags</a></li>
+            <li><a href="../feed.xml">Subscribe</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li><a href="#">Another action</a></li>
+                <li><a href="#">Something else here</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li>
+            <li><a href="../archive.html">Archive</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+	<div class="page-header">
+		<h1>SpringMVC @ModelAttribute注解说明</h1>
+	</div>
+
+	<p><em>25 August 2013</em></p>
+
+	<p>Spring/%40ModelAttribute%E6%B3%A8%E8%A7%A3.html</p>
+ 
+
+	<h2><a href="/Spring/Functional+Endpoints+VS+Controller.html">Next</a></h2>
+
+	<p><p>[TOC]</p>
+<h1><a href="#springmvc-modelattribute注解说明" id="springmvc-modelattribute注解说明">SpringMVC @ModelAttribute注解说明</a></h1>
+<h2><a href="#应用在方法上" id="应用在方法上">应用在方法上</a></h2>
+<pre><code>@Controller
+class TestController {
+    
+    @GetMapping(&quot;/index&quot;)
+    public String index() {
+        return &quot;index&quot;;
+    }
+    
+    @ModelAttribute(&quot;rooms&quot;)
+    private List&lt;RoomVo&gt; findRooms() {
+        return roomService.findAllRooms();
+    }
+}
+</code></pre>
+<p>等价于</p>
+<pre><code>@GetMapping(&quot;/index&quot;)
+public String index(Model model) {
+    model.addAttribute(&quot;rooms&quot;, roomService.findAllRooms());
+    return &quot;index&quot;;
+}
+</code></pre>
+<p>但不同点在于，对于上面的代码来说，执行<code>TestController</code>中的请求时都会先去执行<code>findAllRooms</code>方法，而下面的代码只会在请求<code>/index</code>时才会执行<code>findAllRooms</code>方法。</p>
+<p>注意，可以在<code>findAllRooms</code>中获取请求参数或者路径参数等信息。比如：</p>
+<pre><code>@ModelAttribute(&quot;rooms&quot;)
+private List&lt;RoomVo&gt; findRooms(@PathVariable(value = &quot;id&quot;, required = false) Long id) {
+    return roomService.findAllRooms();
+}
+</code></pre>
+<h2><a href="#应用在方法参数上" id="应用在方法参数上">应用在方法参数上</a></h2>
+<pre><code>@ModelAttribute(&quot;name&quot;)
+private String roomName(){
+    return &quot;room name&quot;;
+}
+
+@GetMapping(&quot;/index1&quot;)
+public String index(@ModelAttribute(&quot;name&quot;) String name) {
+    return &quot;index&quot;;
+}
+</code></pre>
+<p>此时意味着从<code>Model</code>中获取属性值。</p>
+<h2><a href="#配合requestmapping应用在方法上" id="配合requestmapping应用在方法上">配合@RequestMapping应用在方法上</a></h2>
+<pre><code>@GetMapping(&quot;/index&quot;)
+@ModelAttribute(&quot;rooms&quot;)
+public List&lt;RoomVo&gt; index(@ModelAttribute(&quot;name&quot;) String name) {
+    return roomService.findAllRooms());
+}
+</code></pre>
+<p>此时方法返回的是<code>Model</code>数据，而不是<code>View</code>. 对应视图的名字就是请求方法。针对上述代码返回的视图应该是<code>index.jsp</code>或者<code>index.ftl</code>，具体由使用的视图模板来决定。</p>
+</p>
+
+	<hr />
+	
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.6.7</a></p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+    
+  </body>
+</html>

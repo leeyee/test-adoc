@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>部署Springboot项目到云服务器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <!-- Le styles -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/asciidoctor.css" rel="stylesheet">
+    <link href="../css/base.css" rel="stylesheet">
+    <link href="../css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+	
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../">JBake</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="../about.html">About</a></li>
+            <li><a href="../tags.html">Tags</a></li>
+            <li><a href="../feed.xml">Subscribe</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li><a href="#">Another action</a></li>
+                <li><a href="#">Something else here</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li>
+            <li><a href="../archive.html">Archive</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+	<div class="page-header">
+		<h1>部署Springboot项目到云服务器</h1>
+	</div>
+
+	<p><em>25 August 2013</em></p>
+
+	<p>Spring/%E9%83%A8%E7%BD%B2Springboot%E5%88%B0%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8.html</p>
+ 
+
+	<h2><a href="/blog/2013/second-post.html">Next</a></h2>
+
+	<p><p>[TOC]</p>
+<h1><a href="#部署springboot项目到云服务器" id="部署springboot项目到云服务器">部署Springboot项目到云服务器</a></h1>
+<h2><a href="#mysql-配置" id="mysql-配置">mysql 配置</a></h2>
+<p>修改密码安全策略为低（只校验密码长度，至少8位）</p>
+<pre><code>set global validate_password_policy=0; 
+
+ALTER USER 'root'@'localhost' IDENTIFIED BY '12345678';
+</code></pre>
+<h2><a href="#tomcat-配置" id="tomcat-配置">Tomcat 配置</a></h2>
+<pre><code>chmod +x /usr/local/Tomcat8.5/bin/*.sh
+</code></pre>
+<p>执行以下命令，修改Tomcat默认端口号为80。</p>
+<pre><code>sed -i 's/Connector port=&quot;8080&quot;/Connector port=&quot;80&quot;/' /usr/local/Tomcat8.5/conf/server.xml
+</code></pre>
+<h2><a href="#无法访问h2-console" id="无法访问h2-console">无法访问/h2-console</a></h2>
+<p>项目使用h2数据，开启了</p>
+<pre><code>h2.console.enabled=true
+</code></pre>
+<p>但访问是出现异常</p>
+<blockquote>
+<p>H2 Console throwing a error webAllowOthers in H2 database</p>
+</blockquote>
+<p>需要添加配置</p>
+<pre><code>spring.h2.console.settings.web-allow-others=true
+</code></pre>
+<h2><a href="#乱码问题" id="乱码问题">乱码问题</a></h2>
+<h3><a href="#上传文件编码警告" id="上传文件编码警告">上传文件编码警告</a></h3>
+<p>使用<code>scp</code>上传jar到服务器</p>
+<pre><code>scp xxx.jar root@xxx.xx.xx.xxx:/目录
+</code></pre>
+<p>警告</p>
+<blockquote>
+<p>/etc/profile.d/lang.sh: line 19: warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory</p>
+</blockquote>
+<p>此时需要修改CentOS <code>/etc/environment</code> 文件</p>
+<pre><code>vim /etc/environment
+</code></pre>
+<p>添加以下内容：</p>
+<pre><code>NG=en_US.utf-8
+LC_ALL=en_US.utf-8
+</code></pre>
+<h3><a href="#控制台乱码" id="控制台乱码">控制台乱码</a></h3>
+<pre><code>logging.charset.console=UTF-8
+</code></pre>
+<h3><a href="#logback写文件乱码" id="logback写文件乱码">logback写文件乱码</a></h3>
+<pre><code>logging.charset.file=UTF-8
+</code></pre>
+<h2><a href="#nginx-支持sse" id="nginx-支持sse">Nginx 支持SSE</a></h2>
+<p>nginx.conf</p>
+<pre><code>location / {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_buffering on
+}
+</code></pre>
+<p>或者在服务器端添加</p>
+<pre><code>Content-Type: text/event-stream;
+Cache-Control: no-cache;
+X-Accel-Buffering: no;
+</code></pre>
+</p>
+
+	<hr />
+	
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake v2.6.7</a></p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+    
+  </body>
+</html>
