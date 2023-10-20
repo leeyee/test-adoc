@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+	    <meta charset="utf-8"/>
+	    <title>Thirva Import PreVerify Rules Summary</title>
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	    <meta name="description" content=""/>
+	    <meta name="author" content=""/>
+	    <meta name="keywords" content=""/>
+	    <meta name="generator" content="JBake"/>
+	
+	    <!-- Le styles -->
+	    <link href="../css/bootstrap.min.css" rel="stylesheet"/>
+	    <link href="../css/asciidoctor.css" rel="stylesheet"/>
+	    <link href="../css/base.css" rel="stylesheet"/>
+	    <link href="../css/prettify.css" rel="stylesheet"/>
+	
+	    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+	    <!--[if lt IE 9]>
+	      <script src="../js/html5shiv.min.js"></script>
+	    <![endif]-->
+	
+	    <!-- Fav and touch icons -->
+	    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png"/>
+	    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png"/>
+	    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png"/>
+	    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png"/>-->
+	    <link rel="shortcut icon" href="../favicon.ico"/>
+	</head>
+	<body onload="prettyPrint()">
+	<div id="wrap">
+		<div>
+	
+	  <!-- Fixed navbar -->
+      <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../">JBake</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="../about.html">About</a></li>
+            <li><a href="../feed.xml">Subscribe</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li><a href="#">Another action</a></li>
+                <li><a href="#">Something else here</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+	</div>
+		<div class="container">
+	
+			<div class="page-header">
+				<h1>Thirva Import PreVerify Rules Summary</h1>
+			</div>
+		
+			<p><em>13 October 2013</em></p>
+		
+			<p><p>[TOC]</p>
+<p>注意：下面所列的顺序就是校验的顺序</p>
+<h2>Participan Worksheet Pre-Verify</h2>
+<h3>LEVEL1</h3>
+<ol>
+<li>Import data less than 5000 at a time</li>
+</ol>
+<h3>LEVEL2</h3>
+<ol>
+<li>Value is Required(Account, AFN, ALN, AEMAIL, ID, FN, LN)</li>
+</ol>
+<h3>LEVEL3</h3>
+<ol>
+<li>Grade Enum Check</li>
+<li>Number type check(AccountId, ID)</li>
+<li>Name Length check(AFN, ALN, FL, LN)</li>
+<li>Date type check(Account_DOB, DOB)</li>
+<li>Number of family check(Account_email)</li>
+</ol>
+<h2>Order Worksheet Pre-Verify</h2>
+<h3>LEVEL1</h3>
+<ol>
+<li>Import data less than 5000 at a time</li>
+<li>Import order line less than 5000 for one order at a time</li>
+</ol>
+<h3>LEVEL2</h3>
+<ol>
+<li>Value is Required. (All OrderColumnName attr requried is true)</li>
+<li>Name max length check(SeasonName, SessionName, TuitionName)</li>
+</ol>
+<h3>LEVEL3</h3>
+<ol>
+<li>Name max length check(RegFN, RegLN)</li>
+<li>Amount Type check(Tuition_Price, Order_Total)</li>
+<li>All order line with the same order id should have same order total</li>
+<li>Only one season in the order</li>
+<li>Same forigin order have same reg date</li>
+<li>Date type check(Order_Reg_Date)</li>
+<li>==Order Registrant DB check==</li>
+<li>==Tuition DB check==</li>
+</ol>
+<h2>Season Worksheet Pre-Verify</h2>
+<h3>LEVEL1</h3>
+<ol>
+<li>Only one Season can be imported at a time</li>
+<li>when importing season, there must be a session</li>
+</ol>
+<h3>LEVEL2</h3>
+<ol>
+<li>Season name value is required.</li>
+</ol>
+<h3>LEVEL3</h3>
+<ol>
+<li>Name length check (Season_name)</li>
+<li>Date type check (Reg_open_date)</li>
+<li>Season Categroy check</li>
+<li>==Season name DB check==</li>
+</ol>
+<h2>Session Worksheet Pre-Verify</h2>
+<h3>LEVEL1</h3>
+<ol>
+<li>Duplidate Check(Session_name)</li>
+<li>Import session less than 250 at a time</li>
+</ol>
+<h3>LEVEL2</h3>
+<ol>
+<li>Value is required(All SessionColumnName attr requried is true)</li>
+<li>Early bird price check</li>
+<li>Session Option Required check</li>
+<li>Age Restriction check</li>
+<li>Grade Restriction check</li>
+</ol>
+<h3>LEVEL3</h3>
+<ol>
+<li>Name length check</li>
+<li>Description length check</li>
+<li>Session capacity check</li>
+<li>Wailting list policy length check</li>
+<li>Max price check</li>
+<li>Session option capacity check</li>
+<li>Date type check(start,end,close_reg)</li>
+<li>Early bird expired date force check</li>
+<li>Overnight check</li>
+<li>Overnight column check</li>
+<li>Time type check</li>
+<li>Start,end logic check</li>
+<li>Gender check</li>
+<li>Age Range check</li>
+<li>Age from to check</li>
+<li>Age as of check</li>
+<li>Display status check</li>
+<li>Session day of ** check</li>
+<li>Grad type check</li>
+<li>Grade from to check</li>
+<li>Grad restriction check</li>
+<li>==Session name DB check==</li>
+<li>==GL code DB check==</li>
+<li>==Location Name DB check==</li>
+<li>==Session type name DB check==</li>
+<li>==Session option type DB check==</li>
+<li>==Session Date Cross check==</li>
+</ol>
+<h2>Tuition Worksheet Pre-Verify</h2>
+<h3>LEVEL1</h3>
+<ol>
+<li>Duplicate check(Season_name)</li>
+<li>Import tuitions less than 250 at a time</li>
+</ol>
+<h3>LEVEL2</h3>
+<ol>
+<li>Value is required(All TuitionColumnName attr requried is true)</li>
+<li>Early bird price check</li>
+</ol>
+<h3>LEVEL3</h3>
+<ol>
+<li>Name length check</li>
+<li>Max price check</li>
+<li>Early bird expired date force check</li>
+<li>Display status check</li>
+<li>Tuition capacity check</li>
+<li>Description length check</li>
+<li>==GL code DB check==</li>
+<li>==Tuition Cross check==</li>
+</ol>
+</p>
+		
+			<hr />
+			
+		</div>
+	</div>
+	<div>
+			<div id="push"></div>
+    
+		    <div id="footer">
+		      <div class="container">
+		        <p class="muted credit">&copy; 2014 | Mixed with <a href="http://getbootstrap.com/">Bootstrap v3.1.1</a> | Baked with <a href="http://jbake.org">JBake <span>v2.6.7</span></a></p>
+		      </div>
+		    </div>
+	    
+		    <!-- Le javascript
+		    ================================================== -->
+		    <!-- Placed at the end of the document so the pages load faster -->
+		    <script src="../js/jquery-1.11.1.min.js"></script>
+		    <script src="../js/bootstrap.min.js"></script>
+		    <script src="../js/prettify.js"></script>
+    
+    	</div>
+    </body>
+</html>

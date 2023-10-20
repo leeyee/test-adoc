@@ -1,0 +1,443 @@
+<?xml version="1.0"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>JBake</title>
+    <link>http://localhost:8820/</link>
+    <atom:link href="http://localhost:8820//feed.xml" rel="self" type="application/rss+xml" />
+    <description>JBake Bootstrap Template</description>
+    <language>en-gb</language>
+    <pubDate>Wed, 18 Oct 2023 17:51:08 +0800</pubDate>
+    <lastBuildDate>Wed, 18 Oct 2023 17:51:08 +0800</lastBuildDate>
+
+    <item>
+      <title>ACTIVE account statement</title>
+      <link>http://localhost:8820//active/AAS.html</link>
+      <pubDate>Fri, 18 Oct 2013 00:00:00 +0800</pubDate>
+      <guid isPermaLink="false">active/AAS.html</guid>
+      <description>&amp;lt;h1&amp;gt;ACTIVE account statement&amp;lt;/h1&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;Finance -&amp;amp;gt; Report -&amp;amp;gt; ACTIVE account statement&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;strong&amp;gt;核心问题还是查询数据量大的问题。&amp;lt;/strong&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;invoke 2 Requests:&amp;lt;/p&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;/json/ReportProxyService/findPayPeriods&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;/json/LongConnectionProxyService/getActiveAccountStatementReport&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h2&amp;gt;findPayPeriods&amp;lt;/h2&amp;gt;
+&amp;lt;p&amp;gt;Default remittance cycle is &amp;lt;strong&amp;gt;SEMIMONTHLY&amp;lt;/strong&amp;gt;,&amp;lt;br /&amp;gt;
+if agency is not null, used&amp;lt;br /&amp;gt;
+if remittance cycle from &amp;lt;strong&amp;gt;Ledger Service&amp;lt;/strong&amp;gt; if not null, used (HomePageRemittanceInfo.xml)&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;Find &amp;lt;code&amp;gt;RemittancePayPeriodGroup&amp;lt;/code&amp;gt; by &amp;lt;code&amp;gt;findPayPeriodsInDateRange&amp;lt;/code&amp;gt; method in &amp;lt;strong&amp;gt;Ledger Service&amp;lt;/strong&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;getActiveAccountStatementReport&amp;lt;/h2&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Author&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Save access log&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Get Report data&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;Get Report Data by USP&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;
+&amp;lt;p&amp;gt;get base data by usp&amp;lt;/p&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;
+&amp;lt;p&amp;gt;covert to dto&amp;lt;/p&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;sum计算使用了反射，有一定的性能问题（问题应该不大，但可进行优化）&amp;lt;code&amp;gt;ReportOdsDao#sum&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;AUI display&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;dm_ledger_transactions:&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;记录和钱有关的交易。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;每个production(tuition/sessionoption, merchandise) 都会有一笔不同类型的流水; &amp;#39;SALE&amp;#39;&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;总支付总额也会有流水，同时对于支付总额; &amp;amp;quot;PAYMENT&amp;amp;quot;&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;每笔交易的交易费也会产生流水; &amp;amp;quot;FEE&amp;amp;quot;&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;external_order_id/external_order_id_INT : 对应OMS order_id&amp;lt;br /&amp;gt;
+order_reference_id/order_reference_id_INT: 对应OMS order_line_id&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;p&amp;gt;TAB: Payment activity&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;Amount: 订单支付总金额&amp;lt;br /&amp;gt;
+Processing Fee: 订单支付总金额FEE（用户费用+信用卡交易费）&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;生成临时表 &amp;lt;code&amp;gt;#order_line_delta&amp;lt;/code&amp;gt; 数据时，delta_amount 字段使用了如下的计算&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code&amp;gt;ad1.payment_amount - lag((payment_amount), 1, 0)
+	OVER(PARTITION BY al1.order_line_id, ad1.payment_id, ad1.payment_type
+	    ORDER BY ad1.created_dt ) AS delta_amount
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;但在实际查看数据过程中，发现表&amp;lt;code&amp;gt;order_line_pmt_alloc_details.payment_amount_delta&amp;lt;/code&amp;gt; 和该数据相同。&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;Memebership 对应Season信息在USP中使用mock数据， ID=0, Name=&amp;#39;Membership&amp;#39;&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code&amp;gt;SELECT 0            AS grouping_id,
+       pm.order_id,
+       pm.id,
+       0            AS is_waitlist,
+       pm.person_id,
+       NULL         AS session_id,
+       pm.is_online,
+       pm.order_line_id,
+       NULL         AS transfer_type,
+       &amp;#39;Membership&amp;#39; AS grouping_name
+FROM camps_service.dbo.person_memberships pm
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;如果是POS，那么也不存在Season, 因此需要为Season也Mock ID 和 Name信息，如果返回为空的话，会导致AUI的 for Season Filter有异常。&amp;lt;code&amp;gt;AccountStatementView.js#buildSeasonList&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;Card Type&amp;lt;/h3&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code&amp;gt;select * from order_service.dbo.payments where order_id  = 190969971082928
+select top 1 * from order_service.dbo.payment_credit_card where payment_id = 200000000209632442
+select * from order_service.dbo.credit_card_accounts cca where cca.id = 438889627
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;h1&amp;gt;POS&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;Agency同步信息给POS。用户在POS上购买&amp;lt;/p&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;如果用户购买的POS是对应Agency下的，那么Payment activity 会展示用户姓名，并且点击订单可以查看订单详情&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;如果用户购买的POS不是对应Agency下的，那么Payment activity 不会展用户姓名，并且点击订单查看详情的地址是错误的。&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;p&amp;gt;上述两种情况下，Payment activity:&amp;lt;br /&amp;gt;
++ Season 无法展示的，因为找不到。&amp;lt;br /&amp;gt;
++ Payment method 没有，应为POS生成的订单信息中 Cart_Type字段记录为空&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;TAB: Registration activity/Additional purchases activity 展示不出POS订单，除非购买POS的用户是提供POS的agency下的用户。&amp;lt;/p&amp;gt;
+</description>	  
+    </item><item>
+      <title>System Test Basic Info</title>
+      <link>http://localhost:8820//active/Camps+Test.html</link>
+      <pubDate>Fri, 18 Oct 2013 00:00:00 +0800</pubDate>
+      <guid isPermaLink="false">active/Camps+Test.html</guid>
+      <description>&amp;lt;p&amp;gt;[TOC]&amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;System Test Basic Info&amp;lt;/h1&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;
+&amp;lt;p&amp;gt;Test Credit Card: 5454545454545454&amp;lt;/p&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;
+&amp;lt;p&amp;gt;New Register User Init Password: !ActiveTest1&amp;lt;/p&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h1&amp;gt;Tuition Bucket&amp;lt;/h1&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code&amp;gt;https://campscui-vip.int.aw.dev.activenetwork.com/orgs/leeyee?season=[session_id]&amp;amp;amp;buckets=[user_name]![tuition_product_id_1]-[tuition_product_id_2]_[another_user_name]![tuition_product_id_1]-[tuition_product_id_2]&amp;amp;amp;linkback=[call_back_url]
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;for example:&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;http://localhost.dev.activenetwork.com:8082/orgs/leeyee?season=42362602&amp;amp;amp;buckets=Tom!256199202&amp;amp;amp;linkback=https%3a%2f%2fwww.baidu.com%2f&amp;amp;amp;process&amp;quot;&amp;gt;http://localhost.dev.activenetwork.com:8082/orgs/leeyee?season=42362602&amp;amp;amp;buckets=Tom!256199202&amp;amp;amp;linkback=https%3a%2f%2fwww.baidu.com%2f&amp;amp;amp;process&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;http://localhost.dev.activenetwork.com:8082/orgs/leeyee?season=42362602&amp;amp;amp;buckets=Tom!256199202-256199302_Jerry!256199202-256199302&amp;amp;amp;linkback=https%3a%2f%2fwww.baidu.com%2f&amp;amp;amp;process&amp;quot;&amp;gt;http://localhost.dev.activenetwork.com:8082/orgs/leeyee?season=42362602&amp;amp;amp;buckets=Tom!256199202-256199302_Jerry!256199202-256199302&amp;amp;amp;linkback=https%3a%2f%2fwww.baidu.com%2f&amp;amp;amp;process&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;h1&amp;gt;A3&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://jirafnd.dev.activenetwork.com/browse/ACOM-9871&amp;quot;&amp;gt;https://jirafnd.dev.activenetwork.com/browse/ACOM-9871&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;QA AUI:&amp;lt;/h2&amp;gt;
+&amp;lt;p&amp;gt;KEY | VALUE&amp;lt;br /&amp;gt;
+---|---&amp;lt;br /&amp;gt;
+Org | springagency226&amp;lt;br /&amp;gt;
+Season | ClaireCampstest161214&amp;lt;br /&amp;gt;
+Session | William A3 TEST Session&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://campsui-vip.qa.aw.dev.activenetwork.com/springagency226?code=src#/editseason/sessionEditor/2880501/?session=13774202&amp;quot;&amp;gt;https://campsui-vip.qa.aw.dev.activenetwork.com/springagency226?code=src#/editseason/sessionEditor/2880501/?session=13774202&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;h2&amp;gt;kids web:&amp;lt;/h2&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;Sesson要求的注册人必须是Kid，否则不会进入该链接&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;http://int-a3kidsweb-05w.dev.activenetwork.com/city226-al/computers/camp/william-as3-test-session-2018?int=72-4-A4&amp;quot;&amp;gt;http://int-a3kidsweb-05w.dev.activenetwork.com/city226-al/computers/camp/william-as3-test-session-2018?int=72-4-A4&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;http://int-a3kidsweb-06w.dev.activenetwork.com/city226-al/computers/camp/william-as3-test-session-2018?int=72-4-A4&amp;quot;&amp;gt;http://int-a3kidsweb-06w.dev.activenetwork.com/city226-al/computers/camp/william-as3-test-session-2018?int=72-4-A4&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;h2&amp;gt;A3 API (check data) :&amp;lt;/h2&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;strong&amp;gt;DEV:&amp;lt;/strong&amp;gt; &amp;lt;a href=&amp;quot;https://qa-assetapi-vip.dev.activenetwork.com/v1/asset/&amp;quot;&amp;gt;https://qa-assetapi-vip.dev.activenetwork.com/v1/asset/&amp;lt;/a&amp;gt;[a3_asset_guid]&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;strong&amp;gt;PROD:&amp;lt;/strong&amp;gt; &amp;lt;a href=&amp;quot;https://prod-assetapi-vip.active.com/v1/asset/&amp;quot;&amp;gt;https://prod-assetapi-vip.active.com/v1/asset/&amp;lt;/a&amp;gt;[a3_asset_guid]&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;p&amp;gt;For example:&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://qa-assetapi-vip.dev.activenetwork.com/v1/asset/2162B200-766D-4A13-8CD9-F878651025FB&amp;quot;&amp;gt;https://qa-assetapi-vip.dev.activenetwork.com/v1/asset/2162B200-766D-4A13-8CD9-F878651025FB&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;strong&amp;gt;&amp;lt;em&amp;gt;a3_asset_guid&amp;lt;/em&amp;gt;&amp;lt;/strong&amp;gt; come from table &amp;lt;code&amp;gt;sessions.a3_asset_guid&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;
+&amp;lt;p&amp;gt;通过ROOT URL 获取数据后，使用 &amp;lt;em&amp;gt;assetComponents.assetGuid&amp;lt;/em&amp;gt; 节点，再次查询即可拿到具体子数据。&amp;lt;/p&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;sessions.a3_asset_guid&amp;lt;/code&amp;gt; 一旦生成将不会改变，但当数据变化时&amp;lt;em&amp;gt;assetComponents.assetGuid&amp;lt;/em&amp;gt;会改变。因此每次查询子数据时都需要先查询父数据&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+</description>	  
+    </item><item>
+      <title>Fourth Post</title>
+      <link>http://localhost:8820//blog/2013/fourth-post.html</link>
+      <pubDate>Thu, 17 Oct 2013 00:00:00 +0800</pubDate>
+      <guid isPermaLink="false">blog/2013/fourth-post.html</guid>
+      <description>&amp;lt;div class=&amp;quot;imageblock&amp;quot;&amp;gt;
+&amp;lt;div class=&amp;quot;content&amp;quot;&amp;gt;
+&amp;lt;img src=&amp;quot;/img/beach.jpg&amp;quot; alt=&amp;quot;Beach&amp;quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div class=&amp;quot;paragraph&amp;quot;&amp;gt;
+&amp;lt;p&amp;gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vel diam purus. Curabitur ut nisi lacus.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div class=&amp;quot;ulist&amp;quot;&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;http://example.org&amp;quot; class=&amp;quot;bare&amp;quot;&amp;gt;http://example.org&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;http://example.org&amp;quot;&amp;gt;Example.org&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div class=&amp;quot;paragraph&amp;quot;&amp;gt;
+&amp;lt;p&amp;gt;Nam id nisl quam. Donec a lorem sit amet libero pretium vulputate vel ut purus. Suspendisse leo arcu,
+mattis et imperdiet luctus, pulvinar vitae mi. Quisque fermentum sollicitudin feugiat. Mauris nec leo
+ligula. Vestibulum tristique odio ut risus ultricies a hendrerit quam iaculis. Duis tempor elit sit amet
+ligula vehicula et iaculis sem placerat. Fusce dictum, metus at volutpat lacinia, elit massa auctor risus,
+id auctor arcu enim eu augue. Donec ultrices turpis in mi imperdiet ac venenatis sapien sodales. In
+consequat imperdiet nunc quis bibendum. Nulla semper, erat quis ornare tristique, lectus massa posuere
+libero, ut vehicula lectus nunc ut lorem. Aliquam erat volutpat.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;</description>	  
+    </item><item>
+      <title>FNDCAMP-38059 Auto Group Assignment</title>
+      <link>http://localhost:8820//active/FNDCAMP-38059+Auto+Group+Assignment.html</link>
+      <pubDate>Thu, 17 Oct 2013 00:00:00 +0800</pubDate>
+      <guid isPermaLink="false">active/FNDCAMP-38059+Auto+Group+Assignment.html</guid>
+      <description>&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://jirafnd.dev.activenetwork.com/browse/FNDCAMP-38059&amp;quot;&amp;gt;https://jirafnd.dev.activenetwork.com/browse/FNDCAMP-38059&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;[CUI] Particepents:&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;People1 Choose Pref Active:  Pref Active1, Pref Active2, Pref Active3 ….&amp;lt;br /&amp;gt;
+PeopleN Choose Pref Active:  Pref Active1, Pref Active2, Pref Active3 ….&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;[AUI] Config:&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;Season: Active1, Active2, Active3, …, ActiveN [ Show to Participants ]&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;Active1: Room1, Room2, Room3, … RoomN&amp;lt;br /&amp;gt;
+Active2: Room1, Room2, Room3, … RoomN&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;Base Algorithm:&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code&amp;gt;// PersonPrefActives == [Person1.Ative1, …, PersonN.Active1, …, PersonN.ActiveN]
+Loop PersonPrefActives
+    Loop Actives
+        IF PersonPrefActive.Active == Active
+            Loop Rooms
+                IF Room is Open AND Room.capacity &amp;amp;gt; 0
+                    IF Room NOT contain PersonPrefActive.Person
+                        PersonPrefActive.Person ==&amp;amp;gt; Room
+                ELSE
+                    Person ==&amp;amp;gt; Unassgined
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Group是Season级别的。只配置Group type，而没有Group list时， CUI不展示 group 信息&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Participant分配到Group时，需要选择Session。对于online属性的，各个Group分配的Session不应有交集。也就是说一个Season的不同课Group是不会重复的。&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;p&amp;gt;当前表Groups保存的是Group List数据&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;Group_assignments 保存的是Group大类信息&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;group_assignments_sessions 保存Group所属Session&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;新需求：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;Group依旧是Season级别的&amp;lt;/p&amp;gt;
+</description>	  
+    </item><item>
+      <title>Thirva Import PreVerify Rules Summary</title>
+      <link>http://localhost:8820//active/Thirva+Import+PreVerify+Rules+Summary.html</link>
+      <pubDate>Sun, 13 Oct 2013 00:00:00 +0800</pubDate>
+      <guid isPermaLink="false">active/Thirva+Import+PreVerify+Rules+Summary.html</guid>
+      <description>&amp;lt;p&amp;gt;[TOC]&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;注意：下面所列的顺序就是校验的顺序&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;Participan Worksheet Pre-Verify&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL1&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Import data less than 5000 at a time&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL2&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Value is Required(Account, AFN, ALN, AEMAIL, ID, FN, LN)&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL3&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Grade Enum Check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Number type check(AccountId, ID)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Name Length check(AFN, ALN, FL, LN)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Date type check(Account_DOB, DOB)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Number of family check(Account_email)&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h2&amp;gt;Order Worksheet Pre-Verify&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL1&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Import data less than 5000 at a time&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Import order line less than 5000 for one order at a time&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL2&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Value is Required. (All OrderColumnName attr requried is true)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Name max length check(SeasonName, SessionName, TuitionName)&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL3&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Name max length check(RegFN, RegLN)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Amount Type check(Tuition_Price, Order_Total)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;All order line with the same order id should have same order total&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Only one season in the order&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Same forigin order have same reg date&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Date type check(Order_Reg_Date)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==Order Registrant DB check==&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==Tuition DB check==&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h2&amp;gt;Season Worksheet Pre-Verify&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL1&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Only one Season can be imported at a time&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;when importing season, there must be a session&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL2&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Season name value is required.&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL3&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Name length check (Season_name)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Date type check (Reg_open_date)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Season Categroy check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==Season name DB check==&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h2&amp;gt;Session Worksheet Pre-Verify&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL1&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Duplidate Check(Session_name)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Import session less than 250 at a time&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL2&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Value is required(All SessionColumnName attr requried is true)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Early bird price check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Session Option Required check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Age Restriction check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Grade Restriction check&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL3&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Name length check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Description length check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Session capacity check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Wailting list policy length check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Max price check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Session option capacity check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Date type check(start,end,close_reg)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Early bird expired date force check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Overnight check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Overnight column check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Time type check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Start,end logic check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Gender check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Age Range check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Age from to check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Age as of check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Display status check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Session day of ** check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Grad type check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Grade from to check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Grad restriction check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==Session name DB check==&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==GL code DB check==&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==Location Name DB check==&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==Session type name DB check==&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==Session option type DB check==&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==Session Date Cross check==&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h2&amp;gt;Tuition Worksheet Pre-Verify&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL1&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Duplicate check(Season_name)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Import tuitions less than 250 at a time&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL2&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Value is required(All TuitionColumnName attr requried is true)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Early bird price check&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;LEVEL3&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;Name length check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Max price check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Early bird expired date force check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Display status check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Tuition capacity check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Description length check&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==GL code DB check==&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;==Tuition Cross check==&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+</description>	  
+    </item><item>
+      <title>Third Post</title>
+      <link>http://localhost:8820//blog/2013/third-post.html</link>
+      <pubDate>Thu, 26 Sep 2013 00:00:00 +0800</pubDate>
+      <guid isPermaLink="false">blog/2013/third-post.html</guid>
+      <description>&amp;lt;div class=&amp;quot;paragraph&amp;quot;&amp;gt;
+&amp;lt;p&amp;gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vel diam purus. Curabitur ut nisi lacus.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div class=&amp;quot;ulist&amp;quot;&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;http://example.org&amp;quot; class=&amp;quot;bare&amp;quot;&amp;gt;http://example.org&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;http://example.org&amp;quot;&amp;gt;Example.org&amp;lt;/a&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div class=&amp;quot;paragraph&amp;quot;&amp;gt;
+&amp;lt;p&amp;gt;Nam id nisl quam. Donec a lorem sit amet libero pretium vulputate vel ut purus. Suspendisse leo arcu,
+mattis et imperdiet luctus, pulvinar vitae mi. Quisque fermentum sollicitudin feugiat. Mauris nec leo
+ligula. Vestibulum tristique odio ut risus ultricies a hendrerit quam iaculis. Duis tempor elit sit amet
+ligula vehicula et iaculis sem placerat. Fusce dictum, metus at volutpat lacinia, elit massa auctor risus,
+id auctor arcu enim eu augue. Donec ultrices turpis in mi imperdiet ac venenatis sapien sodales. In
+consequat imperdiet nunc quis bibendum. Nulla semper, erat quis ornare tristique, lectus massa posuere
+libero, ut vehicula lectus nunc ut lorem. Aliquam erat volutpat.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;</description>	  
+    </item><item>
+      <title>Second Post</title>
+      <link>http://localhost:8820//blog/2013/second-post.html</link>
+      <pubDate>Sun, 25 Aug 2013 00:00:00 +0800</pubDate>
+      <guid isPermaLink="false">blog/2013/second-post.html</guid>
+      <description>&amp;lt;p&amp;gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vel diam purus. Curabitur ut nisi lacus.&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;http://example.org&amp;quot;&amp;gt;http://example.org&amp;lt;/a&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;http://example.org&amp;quot;&amp;gt;Example.org&amp;lt;/a&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;Nam id nisl quam. Donec a lorem sit amet libero pretium vulputate vel ut purus. Suspendisse leo arcu,&amp;lt;br /&amp;gt;
+mattis et imperdiet luctus, pulvinar vitae mi. Quisque fermentum sollicitudin feugiat. Mauris nec leo&amp;lt;br /&amp;gt;
+ligula. Vestibulum tristique odio ut risus ultricies a hendrerit quam iaculis. Duis tempor elit sit amet&amp;lt;br /&amp;gt;
+ligula vehicula et iaculis sem placerat. Fusce dictum, metus at volutpat lacinia, elit massa auctor risus,&amp;lt;br /&amp;gt;
+id auctor arcu enim eu augue. Donec ultrices turpis in mi imperdiet ac venenatis sapien sodales. In&amp;lt;br /&amp;gt;
+consequat imperdiet nunc quis bibendum. Nulla semper, erat quis ornare tristique, lectus massa posuere&amp;lt;br /&amp;gt;
+libero, ut vehicula lectus nunc ut lorem. Aliquam erat volutpat.&amp;lt;/p&amp;gt;
+</description>	  
+    </item><item>
+      <title>First Post</title>
+      <link>http://localhost:8820//blog/2013/first-post.html</link>
+      <pubDate>Wed, 24 Jul 2013 00:00:00 +0800</pubDate>
+      <guid isPermaLink="false">blog/2013/first-post.html</guid>
+      <description>
+&amp;lt;p&amp;gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vel diam purus. Curabitur ut nisi lacus.&amp;lt;/p&amp;gt;
+
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;http://example.org&amp;quot;&amp;gt;http://example.org&amp;lt;/a&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;http://example.org&amp;quot;&amp;gt;Example.org&amp;lt;/a&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+
+&amp;lt;p&amp;gt;Nam id nisl quam. Donec a lorem sit amet libero pretium vulputate vel ut purus. Suspendisse leo arcu, 
+mattis et imperdiet luctus, pulvinar vitae mi. Quisque fermentum sollicitudin feugiat. Mauris nec leo 
+ligula. Vestibulum tristique odio ut risus ultricies a hendrerit quam iaculis. Duis tempor elit sit amet 
+ligula vehicula et iaculis sem placerat. Fusce dictum, metus at volutpat lacinia, elit massa auctor risus, 
+id auctor arcu enim eu augue. Donec ultrices turpis in mi imperdiet ac venenatis sapien sodales.&amp;lt;/p&amp;gt; 
+
+&amp;lt;pre class=&amp;quot;prettyprint&amp;quot;&amp;gt;
+&amp;lt;code&amp;gt;
+package org.jbake;
+
+public class Oven {
+	public static void main(String[] args) {
+		System.out.print(&amp;quot;Baking!&amp;quot;);
+  }
+}
+&amp;lt;/code&amp;gt;
+&amp;lt;/pre&amp;gt;
+
+&amp;lt;p&amp;gt;In consequat imperdiet nunc quis bibendum. Nulla semper, erat quis ornare tristique, lectus massa posuere 
+libero, ut vehicula lectus nunc ut lorem. Aliquam erat volutpat.&amp;lt;/p&amp;gt;
+</description>	  
+    </item>
+
+  </channel> 
+</rss>
