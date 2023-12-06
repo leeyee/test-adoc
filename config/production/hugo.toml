@@ -1,0 +1,7 @@
+theme = "blowfish"
+baseURL = "https://essay.iyiguo.net/"
+defaultContentLanguage = "en"
+
+
+buildDrafts = false
+buildFuture = false

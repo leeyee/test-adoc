@@ -13,7 +13,7 @@ paginate = 10
 summaryLength = 0
 
 buildDrafts = true
-buildFuture = false
+buildFuture = true
 
 # googleAnalytics = "G-XXXXXXXXX"
 
